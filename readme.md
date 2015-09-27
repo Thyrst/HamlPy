@@ -1,8 +1,11 @@
+# Python 3 Support Status: Experimental
+
+This fork is an attempt to add Python 3 support to HamlPy. As of 2016-09-26, it appears to work but the test suite has not been ported and further work is needed to ensure this package can maintain compatibility with recent Django versions and their supported Pythons.
+
 # HamlPy
 
 HamlPy (pronounced "haml pie") is a tool for Django developers who want to use a Haml like syntax for their templates.
 HamlPy is not a template engine in itself but simply a compiler which will convert HamlPy files into templates that Django can understand.
-
 
 But wait, what is Haml?  Haml is an incredible template engine written in Ruby used a lot in the Rails community.  You can read more about it [here](http://www.haml-lang.com "Haml Home").
 

@@ -8,7 +8,7 @@ before the translation utility extracts tags from it.
 try:
     from django.utils.translation import trans_real
     _django_available = True
-except ImportError, e:
+except ImportError:
     _django_available = False
 
 import hamlpy

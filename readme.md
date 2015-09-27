@@ -70,6 +70,25 @@ Add the HamlPy template loaders to the Django template loaders:
         ...
     )
 
+In Django 1.8+, use `TEMPLATES['OPTIONS']['loaders']`:
+
+    TEMPLATES = [
+        {
+            'BACKEND': 'django.template.backends.django.DjangoTemplates',
+            'DIRS': [...]
+            #'APP_DIRS': True,  # omit when 'loaders' is set
+            'OPTIONS': {
+                'loaders': (
+                     'hamlpy.template.loaders.HamlPyFilesystemLoader',
+                     'hamlpy.template.loaders.HamlPyAppDirectoriesLoader',
+                     'django.template.loaders.filesystem.Loader',      # TODO: needed?
+                     'django.template.loaders.app_directories.Loader', # TODO: needed?
+                ),
+            },
+        },
+    ]
+
+
 If you don't put the HamlPy template loader first, then the standard Django template loaders will try to process
 it first. Make sure your templates have a `.haml` or `.hamlpy` extension, and put them wherever you've told Django
 to expect to find templates (TEMPLATE_DIRS).

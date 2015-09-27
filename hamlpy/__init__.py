@@ -1,1 +1,1 @@
-import templatize
+import .templatize

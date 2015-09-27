@@ -1,6 +1,5 @@
 import re
 import sys
-from types import NoneType
 
 class Element(object):
     """contains the pieces of an element and can populate itself from haml element text"""
@@ -124,7 +123,7 @@ class Element(object):
                 attributes_dict = eval(attribute_dict_string)
                 for k, v in attributes_dict.items():
                     if k != 'id' and k != 'class':
-                        if isinstance(v, NoneType):
+                        if v is None:
                             self.attributes += "%s " % (k,)
                         elif isinstance(v, int) or isinstance(v, float):
                             self.attributes += "%s=%s " % (k, self.attr_wrap(v))
@@ -140,7 +139,7 @@ class Element(object):
                             v = v.decode('utf-8')
                             self.attributes += "%s=%s " % (k, self.attr_wrap(self._escape_attribute_quotes(v)))
                 self.attributes = self.attributes.strip()
-            except Exception, e:
+            except Exception:
                 raise Exception('failed to decode: %s' % attribute_dict_string)
                 #raise Exception('failed to decode: %s. Details: %s'%(attribute_dict_string, e))
 

@@ -136,15 +136,13 @@ class Element(object):
                                                  "\nPlease use inline variables ={...} instead.\n-------------------\n")
 
                             attributes_dict[k] = v
-                            v = v.decode('utf-8')
+                            #v = v.decode('utf-8') # NOT NEEDED IN PYTHON3
+                            # TODO: rewrite the above for python 2 & 3 compatibility
                             self.attributes += "%s=%s " % (k, self.attr_wrap(self._escape_attribute_quotes(v)))
                 self.attributes = self.attributes.strip()
-            except Exception:
+            except Exception as e:
+                # print(e)
                 raise Exception('failed to decode: %s' % attribute_dict_string)
                 #raise Exception('failed to decode: %s. Details: %s'%(attribute_dict_string, e))
 
         return attributes_dict
-
-
-
-

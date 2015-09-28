@@ -29,3 +29,7 @@ def package_contents(package):
             for module in listdir(package_path)
             if module.endswith(MODULE_EXTENSIONS)])
     return contents
+
+# alternate simpler implementation
+# import pkgutil
+# [name for _, name, _ in pkgutil.iter_modules([dirname(loaders.__file__)])]

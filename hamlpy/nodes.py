@@ -526,7 +526,7 @@ class PythonFilterNode(FilterNode):
                 # a PythonFilterNode
                 if e.args:
                     args = list(e.args)
-                    args[0] = "Error in :python filter code: " + e.message
+                    args[0] = "Error in :python filter code: " + str(e)
                     e.args = tuple(args)
                 raise e
             finally:

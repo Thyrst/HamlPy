@@ -1,5 +1,6 @@
 import re
 import sys
+import operator
 
 class Element(object):
     """contains the pieces of an element and can populate itself from haml element text"""
@@ -121,7 +122,7 @@ class Element(object):
                 attribute_dict_string = re.sub(self.ATTRIBUTE_REGEX, '\g<pre>"\g<key>":\g<val>', attribute_dict_string)
                 # Parse string as dictionary
                 attributes_dict = eval(attribute_dict_string)
-                for k, v in attributes_dict.items():
+                for k, v in sorted(attributes_dict.items(), key=operator.itemgetter(0)):
                     if k != 'id' and k != 'class':
                         if v is None:
                             self.attributes += "%s " % (k,)

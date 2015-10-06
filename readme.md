@@ -1,6 +1,6 @@
-# Python 3 Support Status: Experimental
+# Python 3 Support Status: Beta
 
-This fork is an attempt to add Python 3 support to HamlPy. As of 2016-09-26, it appears to work but the test suite has not been ported and further work is needed to ensure this package can maintain compatibility with recent Django versions and their supported Pythons.
+This fork is an attempt to add Python 3 support to HamlPy. As of 2016-10-06, the module and test suite are working in Python3. Currently the changes are not likely to be fully backwards-compatible with Python 2.
 
 # HamlPy
 

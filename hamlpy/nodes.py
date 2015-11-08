@@ -11,6 +11,8 @@ try:
     from pygments import highlight
     from pygments.formatters import HtmlFormatter
     from pygments.lexers import guess_lexer
+    from pygments.lexers.special import TextLexer
+    from pygments.util import ClassNotFound
     _pygments_available = True
 except ImportError:
     _pygments_available = False
@@ -599,7 +601,13 @@ class PygmentsFilterNode(FilterNode):
             self.before = self.render_newlines()
             indent_offset = len(self.children[0].spaces)
             text = ''.join(''.join([c.spaces[indent_offset:], c.haml, c.render_newlines()]) for c in self.children)
-            self.before += highlight(text, guess_lexer(self.haml), HtmlFormatter())
+            try:
+                lexer = guess_lexer(self.haml)
+            except ClassNotFound:
+                # if no lexer thinks it can handle the content
+                # we set default lexer
+                lexer = TextLexer() # HtmlLexer, PythonLexer,... ?
+            self.before += highlight(text, lexer, HtmlFormatter())
         else:
             self.after = self.render_newlines()
 

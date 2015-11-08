@@ -359,15 +359,12 @@ Notice that block, for, if and else, as well as ifequal, ifnotequal, ifchanged a
 
 #### Tags within attributes:
 
-This is not yet supported: `%div{'attr':"- firstof var1 var2 var3"}` will not insert the `{% ... %}`.
+Example:
+`%div{'attr':"-{firstof var1 var2 var3}"}`
+will be translated to
+`<div attr='{% firstof var1 var2 var3 %}'></div>`.
 
-The workaround is to insert actual django template tag code into the haml. For example:
-
-    %a{'href': "{% url socialauth_begin 'github' %}"} Login with Github
-
-is compiled to:
-
-    <a href="{% url socialauth_begin 'github' %}">Login with Github</a>
+Instead of `-{ tag }` you can use an alternative notation `&{ tag }` for better readability.
 
 
 ### Whitespace removal
@@ -429,6 +426,16 @@ Converts the filter text from Markdown to HTML, using the Python [Markdown libra
 ### :highlight
 
 This will output the filtered text with syntax highlighting using [Pygments](http://pygments.org).
+
+Usage:
+`:highlight [lang]`
+
+Example:
+`:highlight python`
+
+You haven't got to specify language, in which case a language will be guessed. However it's not reliable at all :) In the most of cases will be used just lexer for plain text.
+
+For list of avaible lexers look [here](http://pygments.org/docs/lexers/).
 
 For syntax highlighting to work correctly, you will also need to generate or include a Pygments CSS file. See
 the section ["Generating styles"](http://pygments.org/docs/cmdline/#generating-styles) in the Pygments

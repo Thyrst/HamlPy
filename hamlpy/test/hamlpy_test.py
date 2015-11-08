@@ -142,10 +142,16 @@ class HamlPyTest(unittest.TestCase):
             "<a b='{% token %} test'>blah</a>\n",
         )
 
-    def test_inline_tags_in_attributes_work(self):
+    def test_inline_tags_in_attributes_works(self):
         self._test_equal(
             "%div{'asd':'AA&{filter force_escape|lower }AA'}",
             "<div asd='AA{% filter force_escape|lower %}AA'></div>\n",
+        )
+
+    def test_inline_tags_with_arguments_works(self):
+        self._test_equal(
+            "%a{:href => \"&{ url 'video' video.id }\"}<",
+            "<a href='{% url 'video' video.id %}'></a>\n",
         )
 
     def test_inline_tags_escaping_works(self):

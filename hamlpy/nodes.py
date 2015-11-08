@@ -256,10 +256,8 @@ class HamlNode(RootNode):
 class PlaintextNode(HamlNode):
     '''Node that is not modified or processed when rendering'''
     def _render(self):
-        print(self.haml)
         text = self.replace_inline_variables(self.haml)
         text = self.replace_inline_tags(text)
-        print(self.haml)
         # Remove escape character unless inside filter node
         if text and text[0] == HAML_ESCAPE and not self.inside_filter_node():
             text = text.replace(HAML_ESCAPE, '', 1)

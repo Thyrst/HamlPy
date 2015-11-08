@@ -10,7 +10,7 @@ from .elements import Element
 try:
     from pygments import highlight
     from pygments.formatters import HtmlFormatter
-    from pygments.lexers import guess_lexer
+    from pygments.lexers import guess_lexer, get_lexer_by_name
     from pygments.lexers.special import TextLexer
     from pygments.util import ClassNotFound
     _pygments_available = True
@@ -41,8 +41,8 @@ TAG = '-'
 INLINE_VARIABLE = re.compile(r'(?<!\\)([#=]\{\s*(.+?)\s*\})')
 ESCAPED_INLINE_VARIABLE = re.compile(r'\\([#=]\{\s*(.+?)\s*\})')
 
-INLINE_TAG = re.compile(r'(?<!\\)(-\{\s*(.+?)\s*\})')
-ESCAPED_INLINE_TAG = re.compile(r'\\(-\{\s*(.+?)\s*\})')
+INLINE_TAG = re.compile(r'(?<!\\)([-&]\{\s*(.+?)\s*\})')
+ESCAPED_INLINE_TAG = re.compile(r'\\([-&]\{\s*(.+?)\s*\})')
 
 COFFEESCRIPT_FILTERS = [':coffeescript', ':coffee']
 JAVASCRIPT_FILTER = ':javascript'
@@ -116,11 +116,11 @@ def create_node(haml_line):
     if stripped_line == CDATA_FILTER:
         return CDataFilterNode(haml_line)
 
-    if stripped_line == PYGMENTS_FILTER:
-        return PygmentsFilterNode(haml_line)
-
     if stripped_line == MARKDOWN_FILTER:
         return MarkdownFilterNode(haml_line)
+
+    if stripped_line.startswith(PYGMENTS_FILTER):
+        return PygmentsFilterNode(haml_line)
 
     return PlaintextNode(haml_line)
 
@@ -292,7 +292,9 @@ class ElementNode(HamlNode):
         if element.classes:
             start.append(" class=%s" % self.element.attr_wrap(self.replace_inline_variables(element.classes)))
         if element.attributes:
-            start.append(' ' + self.replace_inline_variables(element.attributes))
+            attrs = self.replace_inline_variables(element.attributes)
+            attrs = self.replace_inline_tags(attrs)
+            start.append(' ' + attrs)
 
         content = self._render_inline_content(self.element.inline_content)
 
@@ -373,6 +375,7 @@ class ElementNode(HamlNode):
             content = "{{ " + inline_content.strip() + " }}"
             return content
         else:
+            inline_content = self.replace_inline_tags(inline_content)
             return self.replace_inline_variables(inline_content)
 
 class CommentNode(HamlNode):
@@ -598,15 +601,26 @@ class PygmentsFilterNode(FilterNode):
             if not _pygments_available:
                 raise NotAvailableError("Pygments is not available")
 
+            try:
+                lex_name = self.haml.split(" ", 1)[1]
+            except IndexError:
+                lex_name = False
+
             self.before = self.render_newlines()
             indent_offset = len(self.children[0].spaces)
             text = ''.join(''.join([c.spaces[indent_offset:], c.haml, c.render_newlines()]) for c in self.children)
+
             try:
-                lexer = guess_lexer(self.haml)
+                if lex_name:
+                    lexer = get_lexer_by_name(lex_name)
+                else:
+                    lexer = guess_lexer(text)
             except ClassNotFound:
+                # if invalid lexer name is given or
                 # if no lexer thinks it can handle the content
                 # we set default lexer
-                lexer = TextLexer() # HtmlLexer, PythonLexer,... ?
+                lexer = TextLexer()
+
             self.before += highlight(text, lexer, HtmlFormatter())
         else:
             self.after = self.render_newlines()

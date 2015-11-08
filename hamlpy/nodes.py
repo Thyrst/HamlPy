@@ -39,6 +39,9 @@ TAG = '-'
 INLINE_VARIABLE = re.compile(r'(?<!\\)([#=]\{\s*(.+?)\s*\})')
 ESCAPED_INLINE_VARIABLE = re.compile(r'\\([#=]\{\s*(.+?)\s*\})')
 
+INLINE_TAG = re.compile(r'(?<!\\)(-\{\s*(.+?)\s*\})')
+ESCAPED_INLINE_TAG = re.compile(r'\\(-\{\s*(.+?)\s*\})')
+
 COFFEESCRIPT_FILTERS = [':coffeescript', ':coffee']
 JAVASCRIPT_FILTER = ':javascript'
 CSS_FILTER = ':css'
@@ -60,6 +63,9 @@ def create_node(haml_line):
         return None
 
     if re.match(INLINE_VARIABLE, stripped_line) or re.match(ESCAPED_INLINE_VARIABLE, stripped_line):
+        return PlaintextNode(haml_line)
+
+    if re.match(INLINE_TAG, stripped_line) or re.match(ESCAPED_INLINE_TAG, stripped_line):
         return PlaintextNode(haml_line)
 
     if stripped_line[0] == HAML_ESCAPE:
@@ -239,13 +245,21 @@ class HamlNode(RootNode):
         content = re.sub(ESCAPED_INLINE_VARIABLE, r'\1', content)
         return content
 
+    def replace_inline_tags(self, content):
+        content = re.sub(INLINE_TAG, r'{% \2 %}', content)
+        content = re.sub(ESCAPED_INLINE_TAG, r'\1', content)
+        return content
+
     def __repr__(self):
         return '(%s in=%d, nl=%d: %s)' % (self.__class__, self.indentation, self.newlines, self.haml)
 
 class PlaintextNode(HamlNode):
     '''Node that is not modified or processed when rendering'''
     def _render(self):
+        print(self.haml)
         text = self.replace_inline_variables(self.haml)
+        text = self.replace_inline_tags(text)
+        print(self.haml)
         # Remove escape character unless inside filter node
         if text and text[0] == HAML_ESCAPE and not self.inside_filter_node():
             text = text.replace(HAML_ESCAPE, '', 1)

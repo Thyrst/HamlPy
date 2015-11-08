@@ -79,7 +79,7 @@ In Django 1.8+, use `TEMPLATES['OPTIONS']['loaders']`:
         {
             'BACKEND': 'django.template.backends.django.DjangoTemplates',
             'DIRS': [...]
-            #'APP_DIRS': True,  # omit when 'loaders' is set
+            'APP_DIRS': False,
             'OPTIONS': {
                 'loaders': (
                      'hamlpy.template.loaders.HamlPyFilesystemLoader',

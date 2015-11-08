@@ -1,6 +1,6 @@
 import re
 import sys
-import operator
+from collections import OrderedDict
 
 class Element(object):
     """contains the pieces of an element and can populate itself from haml element text"""
@@ -27,10 +27,15 @@ class Element(object):
     #Single and double quote regexes from: http://stackoverflow.com/a/5453821/281469
     _SINGLE_QUOTE_STRING_LITERAL_REGEX = r"'([^'\\]*(?:\\.[^'\\]*)*)'"
     _DOUBLE_QUOTE_STRING_LITERAL_REGEX = r'"([^"\\]*(?:\\.[^"\\]*)*)"'
-    _ATTRIBUTE_VALUE_REGEX = r'(?P<val>\d+|None(?!\w)|%s|%s)' % (_SINGLE_QUOTE_STRING_LITERAL_REGEX, _DOUBLE_QUOTE_STRING_LITERAL_REGEX)
+    _LIST_REGEX = r'\[([^]\\]*(?:\\.[^]\\]*)*)\]'
+    _ARRAY_REGEX = r'\(([^)\\]*(?:\\.[^)\\]*)*)\)'
+    _ATTRIBUTE_VALUE_REGEX = r'(?P<val>\d+|None(?!\w)|%s|%s|%s|%s)' % \
+        (_SINGLE_QUOTE_STRING_LITERAL_REGEX, _DOUBLE_QUOTE_STRING_LITERAL_REGEX, _LIST_REGEX, _ARRAY_REGEX)
 
-    RUBY_HAML_REGEX = re.compile(r'(:|\")%s(\"|) =>' % (_ATTRIBUTE_KEY_REGEX))
-    ATTRIBUTE_REGEX = re.compile(r'(?P<pre>\{\s*|,\s*)%s\s*:\s*%s' % (_ATTRIBUTE_KEY_REGEX, _ATTRIBUTE_VALUE_REGEX), re.UNICODE)
+    RUBY_HAML_REGEX = re.compile(r'(:|\")%s(\"|) =>' % \
+        (_ATTRIBUTE_KEY_REGEX)) # TODO: `"key => val` shouldn't be valid
+    ATTRIBUTE_REGEX = re.compile(r'(?P<pre>\{\s*|,\s*)%s\s*:\s*%s' % \
+        (_ATTRIBUTE_KEY_REGEX, _ATTRIBUTE_VALUE_REGEX), re.UNICODE)
     DJANGO_VARIABLE_REGEX = re.compile(r'^\s*=\s(?P<variable>[a-zA-Z_][a-zA-Z0-9._-]*)\s*$')
 
 
@@ -119,16 +124,22 @@ class Element(object):
                 # Replace Ruby-style HAML with Python style
                 attribute_dict_string = re.sub(self.RUBY_HAML_REGEX, '"\g<key>":', attribute_dict_string)
                 # Put double quotes around key
-                attribute_dict_string = re.sub(self.ATTRIBUTE_REGEX, '\g<pre>"\g<key>":\g<val>', attribute_dict_string)
+                attribute_dict_string = re.sub(self.ATTRIBUTE_REGEX, '\g<pre>"\g<key>": \g<val>', attribute_dict_string)
                 # Parse string as dictionary
-                attributes_dict = eval(attribute_dict_string)
-                for k, v in sorted(attributes_dict.items(), key=operator.itemgetter(0)):
+                #attributes_dict = eval(attribute_dict_string)
+                attributes_dict = dict_string2ordered(attribute_dict_string) # use of OrderedDict for preserving order from HamlPy
+
+                empty = ""
+                for k, v in attributes_dict.items():
                     if k != 'id' and k != 'class':
                         if v is None:
-                            self.attributes += "%s " % (k,)
+                            empty += "%s " % (k,)
                         elif isinstance(v, int) or isinstance(v, float):
                             self.attributes += "%s=%s " % (k, self.attr_wrap(v))
                         else:
+                            # if array: convert to string
+                            if isinstance(attributes_dict[k], tuple) or isinstance(attributes_dict[k], list):
+                                attributes_dict[k] = ' '.join(str(s) for s in attributes_dict[k])
                             # DEPRECATED: Replace variable in attributes (e.g. "= somevar") with Django version ("{{somevar}}")
                             v = re.sub(self.DJANGO_VARIABLE_REGEX, '{{\g<variable>}}', attributes_dict[k])
                             if v != attributes_dict[k]:
@@ -140,10 +151,30 @@ class Element(object):
                             #v = v.decode('utf-8') # NOT NEEDED IN PYTHON3
                             # TODO: rewrite the above for python 2 & 3 compatibility
                             self.attributes += "%s=%s " % (k, self.attr_wrap(self._escape_attribute_quotes(v)))
+                self.attributes += empty # move empty attributes to the end
                 self.attributes = self.attributes.strip()
             except Exception as e:
-                # print(e)
+                #print(e)
                 raise Exception('failed to decode: %s' % attribute_dict_string)
                 #raise Exception('failed to decode: %s. Details: %s'%(attribute_dict_string, e))
 
         return attributes_dict
+
+def dict_string2ordered(dict_string):
+    # Replace `key: value` to `(key, value)`
+    regex = r'(?P<pre>\{\s*|,\s*)' \
+            r'(?P<key>\'([^\'\\]*(?:\\.[^\'\\]*)*)\'|' \
+                r'"([^"\\]*(?:\\.[^"\\]*)*)")\s*:' \
+            r'\s*(?P<val>\d+|' \
+                r'None(?!\w)|' \
+                r'\'([^\'\\]*(?:\\.[^\'\\]*)*)\'|' \
+                r'"([^"\\]*(?:\\.[^"\\]*)*)"|' \
+                r'\[([^]\\]*(?:\\.[^]\\]*)*)\]|' \
+                r'\(([^)\\]*(?:\\.[^)\\]*)*)\))'
+
+    dict_string = re.sub(regex, '\g<pre>(\g<key>, \g<val>)', dict_string)
+    # Replace curly brackets with square brackets
+    dict_string = re.sub(r'{(.*)}', '[\g<1>]', dict_string)
+    dict_string = "OrderedDict(" + dict_string + ")"
+    ordered_dict = eval(dict_string)
+    return ordered_dict

@@ -41,8 +41,8 @@ TAG = '-'
 INLINE_VARIABLE = re.compile(r'(?<!\\)([#=]\{\s*(.+?)\s*\})')
 ESCAPED_INLINE_VARIABLE = re.compile(r'\\([#=]\{\s*(.+?)\s*\})')
 
-INLINE_TAG = re.compile(r'(?<!\\)([-&]\{\s*(.+?)\s*\})')
-ESCAPED_INLINE_TAG = re.compile(r'\\([-&]\{\s*(.+?)\s*\})')
+INLINE_TAG = re.compile(r'(?<!\\)([-\&]\{\s*(.+?)\s*\})')
+ESCAPED_INLINE_TAG = re.compile(r'\\([-\&]\{\s*(.+?)\s*\})')
 
 COFFEESCRIPT_FILTERS = [':coffeescript', ':coffee']
 JAVASCRIPT_FILTER = ':javascript'

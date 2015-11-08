@@ -44,12 +44,25 @@ class TestElement(object):
         def test_attributes_parse(self):
             sut = Element('')
 
-            s1 = sut._parse_attribute_dictionary('''{a:'something',"b":None,'c':2}''')
-            eq_(s1['a'],'something')
-            eq_(s1['b'],None)
-            eq_(s1['c'],2)
+            s1 = sut._parse_attribute_dictionary('''{:a => 'something',"b": None, d: "asd", 'c':2}''')
+            eq_(s1['a'], 'something')
+            eq_(s1['b'], None)
+            eq_(s1['d'], 'asd')
+            eq_(s1['c'], 2)
 
-            eq_(sut.attributes, "a='something' c='2' b")
+            eq_(sut.attributes, "a='something' d='asd' c='2' b")
+
+        def test_attributes_order(self):
+            sut = Element('')
+            s1 = sut._parse_attribute_dictionary('''{'z':1, 'a':2, 'b':3}''')
+
+            eq_(sut.attributes, "z='1' a='2' b='3'")
+
+        def test_attributes_array(self):
+            sut = Element('')
+            s1 = sut._parse_attribute_dictionary('''{ar: (1, 'a',3), "list":[1, None, "bcd"]}''')
+
+            eq_(sut.attributes, "ar='1 a 3' list='1 None bcd'")
 
         def test_pulls_tag_name_off_front(self):
             sut = Element('%div.class')

@@ -136,13 +136,6 @@ class HamlPyTest(unittest.TestCase):
             "{% url 'main' %} and {% cycle 'odd' 'even' %}\n",
         )
 
-    def test_inline_variables_in_tags_are_parsed_correctly(self):
-        # this isn't practical example :)
-        self._test_equal(
-            "-{ foo #{bar} }",
-            "{% foo {{ bar }} %}\n",
-        )
-
     def test_inline_tags_in_attributes_are_parsed_correctly(self):
         self._test_equal(
             "%a{'b': '&{ token } test'} blah",

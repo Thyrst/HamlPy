@@ -84,8 +84,8 @@ In Django 1.8+, use `TEMPLATES['OPTIONS']['loaders']`:
                 'loaders': (
                      'hamlpy.template.loaders.HamlPyFilesystemLoader',
                      'hamlpy.template.loaders.HamlPyAppDirectoriesLoader',
-                     'django.template.loaders.filesystem.Loader',      # TODO: needed?
-                     'django.template.loaders.app_directories.Loader', # TODO: needed?
+                     'django.template.loaders.filesystem.Loader',
+                     'django.template.loaders.app_directories.Loader', 
                 ),
             },
         },

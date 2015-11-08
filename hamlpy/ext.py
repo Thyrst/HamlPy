@@ -2,7 +2,7 @@
 try:
     import jinja2.ext
     _jinja2_available = True
-except ImportError, e:
+except ImportError as e:
     _jinja2_available = False
 
 import hamlpy
@@ -12,7 +12,13 @@ HAML_FILE_NAME_EXTENSIONS = ['haml', 'hamlpy']
 
 
 def clean_extension(file_ext):
-    if not isinstance(file_ext, basestring):
+    try:
+        valid_ext = isinstance(file_ext, basestring)
+    except NameError as e:
+        # Python3 has no `basestring` abstract type, just `str` and `bytes`
+        valid_ext = isinstance(file_ext, (str,bytes))
+
+    if not valid_ext:
         raise Exception('Wrong file extension format: %r' % file_ext)
     if len(file_ext) > 1 and file_ext.startswith('.'):
         file_ext = file_ext[1:]

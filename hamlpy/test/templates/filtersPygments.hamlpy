@@ -1,7 +1,7 @@
 :highlight
-    print "hi"
+    print("hi")
 
     if x:
-        print "y":
+        print("y"):
     else:
-        print "z":
+        print("z"):

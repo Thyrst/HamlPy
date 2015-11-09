@@ -248,8 +248,14 @@ class HamlNode(RootNode):
         return content
 
     def replace_inline_tags(self, content):
-        content = re.sub(INLINE_TAG, r'{% \2 %}', content)
-        content = re.sub(ESCAPED_INLINE_TAG, r'\1', content)
+        m = re.search(INLINE_TAG, content)
+        if m:
+            # remove escaping from inside of the tag
+            content = re.sub(HAML_ESCAPE + "\\" + self.attr_wrapper, self.attr_wrapper, content)
+            content = re.sub(INLINE_TAG, r'{% \2 %}', content)
+        else:
+            content = re.sub(ESCAPED_INLINE_TAG, r'\1', content)
+
         return content
 
     def __repr__(self):

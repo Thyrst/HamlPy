@@ -154,6 +154,12 @@ class HamlPyTest(unittest.TestCase):
             "<a href='{% url 'video' video.id %}'></a>\n",
         )
 
+    def test_inline_escaping_tags_with_arguments_works(self):
+        self._test_equal(
+            "%tag{attr: \"\\\&{ url 'video' video.id }\"}<",
+            "<tag attr='&{ url \\'video\\' video.id }'></tag>\n",
+        )
+
     def test_inline_tags_escaping_works(self):
         self._test_equal(
             "%p Hi, dude. \\-{firstof v1 v2}, how are you \\&{foo }?",

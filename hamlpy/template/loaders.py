@@ -22,20 +22,27 @@ if _django_available:
     if hasattr(settings, 'HAMLPY_ATTR_WRAPPER'):
         options_dict.update(attr_wrapper=settings.HAMLPY_ATTR_WRAPPER)
 
+def parse_haml(haml_source):
+    hamlParser = hamlpy.Compiler(options_dict=options_dict)
+    html = hamlParser.process(haml_source)
+
+    return html
+
 
 def get_haml_loader(loader):
     if hasattr(loader, 'Loader'):
         baseclass = loader.Loader
     else:
-        class baseclass(object):
-            def get_template_sources(self, *args, **kwargs):
-                return loader.get_template_sources(template_name)
-
-            # deprecated
-            def load_template_source(self, *args, **kwargs):
-                return loader.load_template_source(*args, **kwargs)
+        baseclass = loader
 
     class Loader(baseclass):
+
+        def get_contents(self, origin):
+            haml_source = super(Loader, self).get_contents(origin)
+            html = parse_haml(haml_source)
+
+            return html
+
         # deprecated
         def load_template_source(self, template_name, *args, **kwargs):
             name, _extension = os.path.splitext(template_name)
@@ -50,8 +57,7 @@ def get_haml_loader(loader):
                 except TemplateDoesNotExist:
                     pass
                 else:
-                    hamlParser = hamlpy.Compiler(options_dict=options_dict)
-                    html = hamlParser.process(haml_source)
+                    html = parse_haml(haml_source)
 
                     return html, template_path
 

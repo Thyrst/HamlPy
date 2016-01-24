@@ -1,5 +1,6 @@
 import unittest
 import sys
+import os
 
 try:
   from django.conf import settings
@@ -10,22 +11,47 @@ except ImportError as e:
 
 from hamlpy.template.loaders import get_haml_loader, TemplateDoesNotExist
 
+class Origin(object):
+    def __init__(self, name='', template_name='', loader=None):
+        self.name=name
+        self.template_name=template_name
+        self.loader = loader
+
 class DummyLoader(object):
     """
     A dummy template loader that only loads templates from self.templates
     """
-    templates = {
-        "in_dict.txt" : "in_dict content",
-        "loader_test.hamlpy" : "loader_test content",
-    }
+    dirs = (
+        'templates/loader1',
+        'templates/loader2',
+        'templates/loader3',
+    )
+
     def __init__(self, *args, **kwargs):
         self.Loader = self.__class__
+
+    def get_contents(self, origin):
+        with open(origin.name, 'r') as f:
+            return f.read()
     
+    def get_template_sources(self, template_name, template_dirs=None):
+        for directory in self.dirs:
+            filename = directory + '/' + template_name
+
+            if os.path.isfile(filename):
+                yield Origin(
+                        name=filename,
+                        template_name=template_name,
+                        loader=self,
+                )
+
     def load_template_source(self, template_name, *args, **kwargs):
-        try:
-            return (self.templates[template_name], "test:%s" % template_name)
-        except KeyError:
-            raise TemplateDoesNotExist(template_name)
+        for origin in self.get_template_sources(template_name):
+            try:
+                return self.get_contents(origin), origin.name
+            except TemplateDoesNotExist:
+                pass
+        raise TemplateDoesNotExist(template_name)
 
 class LoaderTest(unittest.TestCase):
     """
@@ -46,29 +72,57 @@ class LoaderTest(unittest.TestCase):
         except TemplateDoesNotExist:
             self.assertTrue(True)
         else:
-            self.assertTrue(False, '\'%s\' should not be loaded by the hamlpy tempalte loader.' % template_name)
+            self.assertTrue(False, '\'%s\' should not be loaded by the hamlpy template loader.' % template_name)
     
     def test_file_not_in_dict(self):
         # not_in_dict.txt doesn't exit, so we're expecting an exception
         self._test_assert_exception('not_in_dict.hamlpy')
     
     def test_file_in_dict(self):
-        # in_dict.txt in in dict, but with an extension not supported by
+        # test5.html in in dict, but with an extension not supported by
         # the loader, so we expect an exception
-        self._test_assert_exception('in_dict.txt')
+        self._test_assert_exception('test5.html')
     
     def test_file_should_load(self):
         # loader_test.hamlpy is in the dict, so it should load fine
         try:
-            self.hamlpy_loader.load_template_source('loader_test.hamlpy')
+            self.hamlpy_loader.load_template_source('test1.haml')
         except TemplateDoesNotExist:
-            self.assertTrue(False, '\'loader_test.hamlpy\' should be loaded by the hamlpy tempalte loader, but it was not.')
+            self.assertTrue(False, '\'test1.haml\' should be loaded by the hamlpy template loader, but it was not.')
         else:
             self.assertTrue(True)
     
     def test_file_different_extension(self):
-        # loader_test.hamlpy is in dict, but we're going to try
-        # to load loader_test.txt
+        # test4.haml is in dict, but we're going to try
+        # to load test4.html
         # we expect an exception since the extension is not supported by
         # the loader
-        self._test_assert_exception('loader_test.txt')
+        self._test_assert_exception('test4.html')
+
+    def test_get_wrong_template(self):
+        try:
+            self.hamlpy_loader.get_template('test3.html')
+        except TemplateDoesNotExist:
+            self.assertTrue(True) # we except an exception
+        else:
+            self.assertTrue(False, '\'test3.html\' shouldn\'t be loaded')
+
+    def test_get_right_template(self):
+        try:
+            t = self.hamlpy_loader.get_template('test3.haml')
+        except TemplateDoesNotExist:
+            self.assertTrue(False, '\'test3.haml\' should be loaded')
+        else:
+            self.assertEqual(t.template.source, '<h2>{{ var }}</h2>\n')
+
+    def test_get_contents(self):
+        content = False
+        for origin in self.hamlpy_loader.get_template_sources('test3.haml'):
+            try:
+                content = self.hamlpy_loader.get_contents(origin)
+                break
+            except TemplateDoesNotExist:
+                pass
+
+        self.assertTrue(bool(content), '.get_template_sources hasn\'t found \'test3.haml\'')
+        self.assertEqual(content, '<h2>{{ var }}</h2>\n')

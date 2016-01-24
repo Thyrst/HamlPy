@@ -28,10 +28,15 @@ def get_haml_loader(loader):
         baseclass = loader.Loader
     else:
         class baseclass(object):
+            def get_template_sources(self, *args, **kwargs):
+                return loader.get_template_sources(template_name)
+
+            # deprecated
             def load_template_source(self, *args, **kwargs):
                 return loader.load_template_source(*args, **kwargs)
 
     class Loader(baseclass):
+        # deprecated
         def load_template_source(self, template_name, *args, **kwargs):
             name, _extension = os.path.splitext(template_name)
             # os.path.splitext always returns a period at the start of extension

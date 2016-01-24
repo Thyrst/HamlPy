@@ -43,6 +43,20 @@ def get_haml_loader(loader):
 
             return html
 
+        def get_template_sources(self, template_name):
+            name, _extension = os.path.splitext(template_name)
+            extension = _extension.lstrip('.')
+
+            if extension in hamlpy.VALID_EXTENSIONS:
+                return super(Loader, self).get_template_sources(template_name)
+
+            else:
+                def empty():
+                    return
+                    yield
+
+                return empty() # returns empty generator
+
         # deprecated
         def load_template_source(self, template_name, *args, **kwargs):
             name, _extension = os.path.splitext(template_name)

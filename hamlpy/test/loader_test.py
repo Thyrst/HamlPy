@@ -45,10 +45,13 @@ class DummyLoader(object):
                         loader=self,
                 )
 
+    # deprecated
     def load_template_source(self, template_name, *args, **kwargs):
-        for origin in self.get_template_sources(template_name):
+        dummy = DummyLoader() # we are testing only this method by using origin class
+
+        for origin in dummy.get_template_sources(template_name):
             try:
-                return self.get_contents(origin), origin.name
+                return dummy.get_contents(origin), origin.name
             except TemplateDoesNotExist:
                 pass
         raise TemplateDoesNotExist(template_name)
@@ -66,7 +69,7 @@ class LoaderTest(unittest.TestCase):
         hamlpy_loader_class = get_haml_loader(dummy_loader)
         self.hamlpy_loader = hamlpy_loader_class()
     
-    def _test_assert_exception(self, template_name):
+    def _test_deprecated_assert_exception(self, template_name):
         try:
             self.hamlpy_loader.load_template_source(template_name)
         except TemplateDoesNotExist:
@@ -74,6 +77,37 @@ class LoaderTest(unittest.TestCase):
         else:
             self.assertTrue(False, '\'%s\' should not be loaded by the hamlpy template loader.' % template_name)
     
+    def test_deprecated_file_not_in_dict(self):
+        # not_in_dict.txt doesn't exit, so we're expecting an exception
+        self._test_deprecated_assert_exception('not_in_dict.hamlpy')
+    
+    def test_deprecated_file_in_dict(self):
+        # test5.html in in dict, but with an extension not supported by
+        # the loader, so we expect an exception
+        self._test_deprecated_assert_exception('test5.html')
+    
+    def test_deprecated_file_should_load(self):
+        # test1.haml is in the dict, so it should load fine
+        try:
+            self.hamlpy_loader.load_template_source('test1.haml')
+        except TemplateDoesNotExist:
+            self.assertTrue(False, '\'test1.haml\' should be loaded by the hamlpy template loader, but it was not.')
+        else:
+            self.assertTrue(True)
+    
+    def test_deprecated_file_different_extension(self):
+        # test4.haml is in dict, but we're going to try
+        # to load test4.html
+        # we expect an exception since the extension is not supported by
+        # the loader
+        self._test_deprecated_assert_exception('test4.html')
+    
+    def _test_assert_exception(self, template_name):
+        gen = self.hamlpy_loader.get_template_sources(template_name)
+        i = len(list(gen))
+
+        self.assertEqual(i, 0, '\'%s\' shouldn\'t be loaded.' % template_name)
+       
     def test_file_not_in_dict(self):
         # not_in_dict.txt doesn't exit, so we're expecting an exception
         self._test_assert_exception('not_in_dict.hamlpy')
@@ -84,23 +118,14 @@ class LoaderTest(unittest.TestCase):
         self._test_assert_exception('test5.html')
     
     def test_file_should_load(self):
-        # loader_test.hamlpy is in the dict, so it should load fine
-        try:
-            self.hamlpy_loader.load_template_source('test1.haml')
-        except TemplateDoesNotExist:
-            self.assertTrue(False, '\'test1.haml\' should be loaded by the hamlpy template loader, but it was not.')
-        else:
-            self.assertTrue(True)
+        # test1.haml is in the dict, so it should load fine
+        gen = self.hamlpy_loader.get_template_sources('test1.haml')
+        i = len(list(gen))
+
+        self.assertEqual(i, 2, '\'test1.haml\' should be loaded by the hamlpy template loader, but it was not.')
     
     def test_file_different_extension(self):
-        # test4.haml is in dict, but we're going to try
-        # to load test4.html
-        # we expect an exception since the extension is not supported by
-        # the loader
         self._test_assert_exception('test4.html')
-
-    def test_get_template_sources(self):
-        self.assertTrue(False, 'Finish the test!')
 
     def test_get_contents(self):
         content = False

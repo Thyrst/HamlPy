@@ -115,6 +115,9 @@ class LoaderTest(unittest.TestCase):
         else:
             self.assertEqual(t.template.source, '<h2>{{ var }}</h2>\n')
 
+    def test_get_template_sources(self):
+        self.assertTrue(False, 'Finish the test!')
+
     def test_get_contents(self):
         content = False
         for origin in self.hamlpy_loader.get_template_sources('test3.haml'):

@@ -99,22 +99,6 @@ class LoaderTest(unittest.TestCase):
         # the loader
         self._test_assert_exception('test4.html')
 
-    def test_get_wrong_template(self):
-        try:
-            self.hamlpy_loader.get_template('test3.html')
-        except TemplateDoesNotExist:
-            self.assertTrue(True) # we except an exception
-        else:
-            self.assertTrue(False, '\'test3.html\' shouldn\'t be loaded')
-
-    def test_get_right_template(self):
-        try:
-            t = self.hamlpy_loader.get_template('test3.haml')
-        except TemplateDoesNotExist:
-            self.assertTrue(False, '\'test3.haml\' should be loaded')
-        else:
-            self.assertEqual(t.template.source, '<h2>{{ var }}</h2>\n')
-
     def test_get_template_sources(self):
         self.assertTrue(False, 'Finish the test!')
 
